@@ -7,7 +7,7 @@
     "build": "npm run tsup -- --minify --dts",
     "clean": "shx rm -rf lib",
     "dev": "npm run tsup -- --watch",
-    "docs": "typedoc --out docs src",
+    "docs": "typedoc --out docs src && shx touch docs/.nojekyl",
     "prepublishOnly": "npm run clean && npm run build",
     "test": "jest",
     "tsup": "tsup src/index.ts -d lib"
