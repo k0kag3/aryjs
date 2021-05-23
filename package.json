@@ -1,6 +1,6 @@
 {
   "name": "aryjs",
-  "description": "aryjs",
+  "description": "A Node.js wrapper for Eka's Portal.",
   "version": "0.1.1",
   "author": "kokage <k0kag3.k0kag3+github@gmail.com>",
   "scripts": {
