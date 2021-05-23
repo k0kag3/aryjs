@@ -151,7 +151,7 @@ export async function* iterateLatestUpdates(
       break;
     }
 
-    yield updates;
+    yield { cursor, updates };
 
     args = cursor.nextLink;
   }
