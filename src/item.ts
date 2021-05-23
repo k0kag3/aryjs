@@ -43,31 +43,34 @@ export async function getItemDetail(itemId: string): Promise<Item> {
   const authorAvatarUrl =
     document.querySelector<HTMLImageElement>(".avatar")?.src;
   if (!authorAvatarUrl) {
-    throw new Error("Cannot find avatar url");
+    throw new Error("Cannot find avatar url: " + document.body.innerHTML);
   }
 
   const mimeType = document
     .querySelector<HTMLDivElement>(".item-detail > p:nth-child(4)")
     ?.textContent?.match(/MIME Type: (.+)/)?.[1];
   if (!mimeType) {
-    throw new Error("Cannot find mime type");
+    throw new Error("Cannot find mime type: " + document.body.innerHTML);
   }
 
   const itemBox = document.querySelector(".item-box");
   if (!itemBox) {
-    throw new Error("Cannot locate item box");
+    throw new Error("Cannot locate item box: " + document.body.innerHTML);
   }
 
   const downloadUrl = `https://aryion.com/g4/data.php?id=${itemId}`;
   const tags = parseTags(document);
   if (!tags) {
-    throw new Error("Cannot parse tags");
+    throw new Error("Cannot parse tags: " + document.body.innerHTML);
   }
 
   const itemItself = itemBox.querySelector("#item-itself");
   if (!itemItself) {
     // text/plain
-    const gBoxContents = itemBox.querySelector(".g-box-contents")!;
+    const gBoxContents = itemBox.querySelector(".g-box-contents");
+    if (!gBoxContents) {
+      throw new Error("Cannot find gbox contents: " + itemBox.innerHTML);
+    }
     return {
       type: "writing",
       mimeType,
