@@ -8,7 +8,7 @@ export interface GetLatestUpdatesResponse {
 }
 
 export interface PageCursor {
-  current: number;
+  currentPage: number;
   prevLink: string | undefined;
   nextLink: string | undefined;
 }
@@ -37,6 +37,25 @@ export interface GetLatestUpdatesOptions {
 }
 
 const LATEST_UPDATES_ENDPOINT = "https://aryion.com/g4/latest.php";
+
+function parsePageCursor(document: Document): PageCursor | undefined {
+  const jumps = document.querySelector(".pagejumps");
+
+  if (!jumps) {
+    return undefined;
+  }
+
+  const currentPage = parseInt(jumps.querySelector("strong")!.textContent!, 10);
+  const prevLink = (jumps.previousElementSibling as HTMLAnchorElement | null)
+    ?.href;
+  const nextLink = (jumps.nextElementSibling as HTMLAnchorElement | null)?.href;
+
+  return {
+    currentPage,
+    prevLink,
+    nextLink,
+  };
+}
 
 /**
  * Get latest updates.
@@ -122,21 +141,18 @@ export async function getLatestUpdates(
   };
 }
 
-function parsePageCursor(document: Document): PageCursor | undefined {
-  const jumps = document.querySelector(".pagejumps");
+export async function* iterateLatestUpdates(
+  args?: string | GetLatestUpdatesOptions
+) {
+  while (true) {
+    const { cursor, updates } = await getLatestUpdates(args);
 
-  if (!jumps) {
-    return undefined;
+    if (!cursor.nextLink) {
+      break;
+    }
+
+    yield updates;
+
+    args = cursor.nextLink;
   }
-
-  const current = parseInt(jumps.querySelector("strong")!.textContent!, 10);
-  const prevLink = (jumps.previousElementSibling as HTMLAnchorElement | null)
-    ?.href;
-  const nextLink = (jumps.nextElementSibling as HTMLAnchorElement | null)?.href;
-
-  return {
-    current,
-    prevLink,
-    nextLink,
-  };
 }

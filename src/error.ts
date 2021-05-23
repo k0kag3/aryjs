@@ -5,15 +5,6 @@ class CustomError extends Error {
   }
 }
 
-export class DuplicatedSubscriptionError extends CustomError {
-  username: string;
-
-  constructor(username: string) {
-    super(`${username} has already been subscribed`);
-    this.username = username;
-  }
-}
-
 export class AryionUserNotFoundError extends CustomError {
   username: string;
 

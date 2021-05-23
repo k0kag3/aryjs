@@ -1,10 +1,18 @@
 import { getDOM } from "./dom";
 
-export interface BaseItem {
-  authorAvatarUrl: string;
+interface Tag {
+  name: string;
+  url: string;
+  types: string[];
 }
 
-export type Item = ImageItem | WritingItem | OtherMaterialItem;
+export interface BaseItem {
+  mimeType: string;
+  viewUrl: string;
+  downloadUrl: string;
+  authorAvatarUrl: string;
+  tags: Tag[];
+}
 
 export interface ImageItem extends BaseItem {
   type: "image";
@@ -16,24 +24,70 @@ export interface ImageItem extends BaseItem {
 
 export interface WritingItem extends BaseItem {
   type: "writing";
+  content?: {
+    text: string;
+    html: string;
+  };
 }
 
 export interface OtherMaterialItem extends BaseItem {
   type: "other";
 }
 
-export async function getItemDetail(itemId: string): Promise<Item> {
-  const itemEndpoint = `https://aryion.com/g4/view/${itemId}`;
-  const document = await getDOM(itemEndpoint);
+export type Item = ImageItem | WritingItem | OtherMaterialItem;
 
-  const itemTag = document.querySelector("#item-itself")!.tagName;
+export async function getItemDetail(itemId: string): Promise<Item> {
+  const viewUrl = `https://aryion.com/g4/view/${itemId}`;
+  const document = await getDOM(viewUrl);
 
   const authorAvatarUrl =
-    document.querySelector<HTMLImageElement>(".avatar")!.src;
+    document.querySelector<HTMLImageElement>(".avatar")?.src;
+  if (!authorAvatarUrl) {
+    throw new Error("Cannot find avatar url");
+  }
+
+  const mimeType = document
+    .querySelector<HTMLDivElement>(".item-detail > p:nth-child(4)")
+    ?.textContent?.match(/MIME Type: (.+)/)?.[1];
+  if (!mimeType) {
+    throw new Error("Cannot find mime type");
+  }
+
+  const itemBox = document.querySelector(".item-box");
+  if (!itemBox) {
+    throw new Error("Cannot locate item box");
+  }
+
+  const downloadUrl = `https://aryion.com/g4/data.php?id=${itemId}`;
+  const tags = parseTags(document);
+  if (!tags) {
+    throw new Error("Cannot parse tags");
+  }
+
+  const itemItself = itemBox.querySelector("#item-itself");
+  if (!itemItself) {
+    // text/plain
+    const gBoxContents = itemBox.querySelector(".g-box-contents")!;
+    return {
+      type: "writing",
+      mimeType,
+      tags,
+      viewUrl,
+      downloadUrl,
+      authorAvatarUrl,
+      content: {
+        text: gBoxContents.textContent || "",
+        html: gBoxContents.innerHTML,
+      },
+    };
+  }
+  const itemTag = itemItself.tagName;
 
   switch (itemTag) {
     case "IMG": {
-      // image
+      /** Expected formats:
+       * - images
+       */
       const ogpImageUrl = document.querySelector<HTMLMetaElement>(
         'meta[name="twitter:image"]'
       )!.content;
@@ -44,29 +98,72 @@ export async function getItemDetail(itemId: string): Promise<Item> {
 
       return {
         type: "image",
+        mimeType,
+        tags,
+        viewUrl,
+        downloadUrl,
+        authorAvatarUrl,
         images: {
           small: ogpImageUrl,
           original: imageUrl,
         },
-        authorAvatarUrl,
-      } as ImageItem;
+      };
     }
     case "IFRAME": {
-      // text / pdf / rtf / other office document
-      return {
+      /** Expected formats:
+       * - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+       * - application/rtf
+       * - application/msword
+       * - application/pdf
+       */
+      const iframe = itemItself as HTMLIFrameElement;
+      const contentUrl = iframe.src;
+
+      const writing: WritingItem = {
         type: "writing",
+        mimeType,
+        tags,
+        viewUrl,
+        downloadUrl,
         authorAvatarUrl,
-      } as WritingItem;
+      };
+
+      if (mimeType !== "application/pdf") {
+        const res = await getDOM(contentUrl);
+        writing.content = {
+          text: res.body.textContent?.trim() || "",
+          html: res.body.innerHTML,
+        };
+      }
+
+      return writing;
     }
     case "DIV": {
-      // flash
+      // flash?
       return {
         type: "other",
+        mimeType,
+        tags,
+        viewUrl,
+        downloadUrl,
         authorAvatarUrl,
-      } as OtherMaterialItem;
+      };
     }
     default: {
       throw new Error("Unrecognized item type found");
     }
   }
+}
+
+function parseTags(document: Document): Tag[] | undefined {
+  const taglist = document.querySelectorAll<HTMLAnchorElement>(".taglist > a");
+  if (!taglist) return undefined;
+
+  const tags = Array.from(taglist).map((el) => ({
+    name: el.innerHTML,
+    url: el.href,
+    types: Array.from(el.classList),
+  }));
+
+  return tags;
 }
