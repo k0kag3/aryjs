@@ -11,12 +11,12 @@ it("can fetch latest items from specific user", async () => {
 it("can parse page cursor", async () => {
   const { cursor } = await getLatestUpdates();
 
-  expect(cursor.current).toBe(1);
+  expect(cursor.currentPage).toBe(1);
   expect(cursor.prevLink).toBeUndefined();
   expect(cursor.nextLink).toBeTruthy();
 
   const { cursor: pc2 } = await getLatestUpdates(cursor.nextLink);
-  expect(pc2.current).toBe(2);
+  expect(pc2.currentPage).toBe(2);
   expect(pc2.prevLink).toBeTruthy();
   expect(pc2.nextLink).toBeTruthy();
 });
