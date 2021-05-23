@@ -1,6 +1,6 @@
 import { getDOM } from "./dom";
 
-interface Tag {
+export interface Tag {
   name: string;
   url: string;
   types: string[];
