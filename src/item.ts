@@ -39,6 +39,9 @@ export type Item = ImageItem | WritingItem | OtherMaterialItem;
 export async function getItemDetail(itemId: string): Promise<Item> {
   const viewUrl = `https://aryion.com/g4/view/${itemId}`;
   const document = await getDOM(viewUrl);
+  if (!document) {
+    throw new Error("Cannot fetch document");
+  }
 
   const authorAvatarUrl =
     document.querySelector<HTMLImageElement>(".avatar")?.src;
@@ -133,6 +136,9 @@ export async function getItemDetail(itemId: string): Promise<Item> {
 
       if (mimeType !== "application/pdf") {
         const res = await getDOM(contentUrl);
+        if (!res) {
+          throw new Error("Cannot fetch document");
+        }
         writing.content = {
           text: res.body.textContent?.trim() || "",
           html: res.body.innerHTML,

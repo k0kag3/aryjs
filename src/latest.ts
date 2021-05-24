@@ -86,6 +86,10 @@ export async function getLatestUpdates(
   }
 
   const document = await getDOM(target);
+  if (!document) {
+    throw new Error("Cannot fetch document");
+  }
+
   const cursor = parsePageCursor(document)!;
 
   const updates = Array.from(document.querySelectorAll(".detail-item")).map(
