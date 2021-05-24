@@ -71,21 +71,23 @@ export async function getItemDetail(itemId: string): Promise<Item> {
   if (!itemItself) {
     // text/plain
     const gBoxContents = itemBox.querySelector(".g-box-contents");
-    if (!gBoxContents) {
-      throw new Error("Cannot find gbox contents: " + itemBox.innerHTML);
-    }
-    return {
+
+    const plaintextWriting: WritingItem = {
       type: "writing",
       mimeType,
       tags,
       viewUrl,
       downloadUrl,
       authorAvatarUrl,
-      content: {
+    };
+    if (gBoxContents) {
+      // if not, conversion of this document for embeded viewing failed.
+      plaintextWriting.content = {
         text: gBoxContents.textContent || "",
         html: gBoxContents.innerHTML,
-      },
-    };
+      };
+    }
+    return plaintextWriting;
   }
   const itemTag = itemItself.tagName;
 
