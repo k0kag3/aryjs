@@ -1,7 +1,7 @@
 {
   "name": "aryjs",
   "description": "A Node.js wrapper for Eka's Portal.",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "author": "kokage <k0kag3.k0kag3+github@gmail.com>",
   "scripts": {
     "build": "npm run tsup -- --minify --dts",
