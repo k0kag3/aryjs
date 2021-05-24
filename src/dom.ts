@@ -33,9 +33,11 @@ export async function getDOM(
       debug("error", err, err.code);
       if (err.name === "CFTIMEOUT") {
         if (retryCount <= 0) {
+          debug("reached retry max");
           throw err;
         }
         retryCount -= 1;
+        debug("retrying:", retryCount);
       } else {
         throw err;
       }
