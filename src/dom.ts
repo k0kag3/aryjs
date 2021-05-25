@@ -14,34 +14,27 @@ export async function getDOM(
   let document: Document;
 
   while (true) {
-    try {
-      const res = await fetch(endpoint);
-      debug("status:", res.status);
-      switch (res.status) {
-        case 522: {
-          const err = new Error();
-          err.name = "CFTIMEOUT";
-          throw err;
-        }
-      }
-      const resText = await res.text();
-
-      document = new JSDOM(resText).window.document;
-
-      break;
-    } catch (err) {
-      debug("error", err, err.code);
-      if (err.name === "CFTIMEOUT") {
+    const res = await fetch(endpoint);
+    debug("status:", res.status);
+    switch (res.status) {
+      case 500:
+      case 522: {
         if (retryCount <= 0) {
           debug("reached retry max");
-          throw err;
+          throw new Error(res.status + ": " + res.statusText);
         }
         retryCount -= 1;
         debug("retrying:", retryCount);
-      } else {
-        throw err;
+        break;
       }
+      case 404:
+        return undefined;
     }
+    const resText = await res.text();
+
+    document = new JSDOM(resText).window.document;
+
+    break;
   }
 
   return document;
