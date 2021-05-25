@@ -25,7 +25,7 @@ export async function getDOM(
         }
         retryCount -= 1;
         debug("retrying:", retryCount);
-        break;
+        continue;
       }
       case 404:
         return undefined;
