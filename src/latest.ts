@@ -94,7 +94,7 @@ export async function getLatestUpdates(
 
   const updates = Array.from(document.querySelectorAll(".detail-item")).map(
     (element): Update => {
-      const update = {
+      const update: Update = {
         itemId: element
           .querySelector<HTMLAnchorElement>(".iteminfo a")!
           .href.replace("https://aryion.com/g4/view/", ""),
@@ -113,12 +113,12 @@ export async function getLatestUpdates(
         tags: Array.from(element.querySelectorAll(".taglist > a")).map(
           (link) => link.textContent!
         ),
-        shortDescription: element.querySelector(
-          ".iteminfo > p:nth-last-child(1)"
-        )!.textContent!,
+        shortDescription:
+          element.querySelector(".iteminfo > p:nth-last-child(1)")
+            ?.textContent ?? "",
         detailUrl:
           element.querySelector<HTMLAnchorElement>(".iteminfo a")!.href,
-      } as Update;
+      };
 
       const thumbnail =
         element.querySelector<HTMLImageElement>("a.thumb > img");
